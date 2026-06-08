@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Decoder · Decode Your Future</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070d; --bg2:#0d0e18; --panel:#11131f; --panel2:#161929;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --ink:#eef1fb; --mute:#9aa0bd; --faint:#646a87;
+  --crimson:#ff3457; --crimson-d:#c01f3c; --cyan:#34e6f0; --cyan-d:#0c8c93;
+  --gold:#ffc24b; --green:#54e08b; --purple:#9b8cff; --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;min-height:100vh;overflow-x:hidden;position:relative;
+  background-image:radial-gradient(900px 600px at 50% -10%, rgba(255,52,87,.10), transparent 60%),radial-gradient(700px 500px at 90% 110%, rgba(52,230,240,.08), transparent 55%);}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px;opacity:.35;mask-image:radial-gradient(ellipse 80% 70% at 50% 35%,#000 40%,transparent 100%);}
+.scan{position:fixed;left:0;right:0;height:140px;z-index:1;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(52,230,240,.07),transparent);animation:scan 7s linear infinite;opacity:.6}
+@keyframes scan{0%{top:-140px}100%{top:100%}}
+.wrap{position:relative;z-index:2;max-width:760px;margin:0 auto;padding:34px 20px 70px}
+.kicker{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.34em;color:var(--cyan);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:1px;background:var(--cyan)}
+h1{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(34px,7vw,58px);line-height:.98;letter-spacing:-.01em;margin:14px 0 8px}
+h1 .b{color:var(--crimson)}
+.sub{color:var(--mute);font-size:15px;font-weight:300;max-width:52ch;line-height:1.55}
+.console{margin-top:30px;background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line2);border-radius:var(--r);box-shadow:0 30px 80px -40px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden}
+.cbar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--faint);letter-spacing:.12em}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--crimson);box-shadow:0 0 10px var(--crimson)}
+.cbody{padding:22px 22px 26px}
+.grp{margin-bottom:22px}
+.glabel{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:3px}
+.ghint{font-size:12.5px;color:var(--faint);margin-bottom:14px;font-weight:300}
+.rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:11px 26px}
+.row{display:flex;align-items:center;gap:12px}
+.rname{font-size:13px;min-width:96px;color:var(--ink);font-weight:400}
+.rval{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--cyan);min-width:20px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:4px;background:#262a40;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--cyan);box-shadow:0 0 12px rgba(52,230,240,.7);cursor:pointer;transition:transform .12s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--cyan);box-shadow:0 0 12px rgba(52,230,240,.7);cursor:pointer}
+.prow .rname{min-width:78px;text-align:right;color:var(--mute);font-size:12px}
+.prow .rname.r{text-align:left}
+.decode{width:100%;margin-top:6px;padding:17px;border:none;border-radius:11px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:17px;letter-spacing:.06em;color:#fff;background:linear-gradient(100deg,var(--crimson),var(--crimson-d));position:relative;overflow:hidden;box-shadow:0 14px 40px -14px rgba(255,52,87,.8);transition:transform .12s,box-shadow .2s}
+.decode:hover{transform:translateY(-2px);box-shadow:0 20px 50px -14px rgba(255,52,87,.9)}
+.decode:active{transform:translateY(0)}
+.decode:disabled{cursor:default;background:var(--panel2);color:var(--cyan);box-shadow:none;font-family:'JetBrains Mono',monospace;letter-spacing:.2em;font-size:14px}
+.decode .swipe{position:absolute;inset:0;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(-120%);animation:swipe 2.4s ease-in-out infinite}
+@keyframes swipe{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+#stage{margin-top:26px}
+.screen{animation:fade .5s}
+.fade{opacity:0;transform:translateY(14px);animation:fade .6s forwards}
+@keyframes fade{to{opacity:1;transform:none}}
+.typecard{text-align:center;padding:34px 20px 30px;background:radial-gradient(420px 220px at 50% 0,rgba(255,52,87,.14),transparent 70%);border:1px solid var(--line2);border-radius:var(--r);position:relative;overflow:hidden}
+.unlock{position:absolute;top:14px;right:16px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;color:var(--green);border:1px solid rgba(84,224,139,.4);padding:4px 9px;border-radius:6px}
+.ftype{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.36em;color:var(--faint);text-transform:uppercase}
+.tname{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:clamp(40px,9vw,64px);line-height:1;margin:10px 0 8px;color:var(--crimson);text-shadow:0 0 28px rgba(255,52,87,.45)}
+.tdesc{color:var(--ink);font-size:15.5px;font-weight:300;max-width:42ch;margin:0 auto;line-height:1.5}
+.tmix{color:var(--faint);font-size:12.5px;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;margin-top:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px}
+.shead{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px}
+.stitle{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:24px;margin-bottom:18px;line-height:1.15}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;align-items:center}
+.opline{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;font-size:13.5px;line-height:1.5;color:var(--mute)}
+.opline b{color:var(--cyan);font-weight:500}
+.bar{margin-bottom:11px}
+.blabel{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
+.blabel .nm{color:var(--mute)}.blabel .nm.hot{color:var(--ink);font-weight:500}
+.tagpill{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;color:var(--cyan);border:1px solid rgba(52,230,240,.4);padding:1px 7px;border-radius:20px;margin-left:8px;vertical-align:1px}
+.btrack{height:9px;border-radius:6px;background:#1c2030;overflow:hidden}
+.bfill{height:100%;width:0;border-radius:6px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.gcard{border:1px solid rgba(255,194,75,.26);background:rgba(255,194,75,.05);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.gcard h4{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:17px;color:var(--gold);margin-bottom:4px}
+.gcard .gtag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-bottom:12px}
+.gsugg{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;font-size:13.5px;line-height:1.5;color:var(--mute)}
+.gsugg .n{font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:12px;margin-top:1px;min-width:16px}
+.intro{font-size:14px;color:var(--mute);font-weight:300;line-height:1.6;margin-bottom:18px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 22px}
+.chip{font-family:'Sora',sans-serif;font-size:14px;padding:10px 16px;border-radius:30px;border:1px solid var(--line2);background:transparent;color:var(--mute);cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--cyan);color:var(--ink)}
+.chip.on{background:rgba(52,230,240,.12);border-color:var(--cyan);color:var(--cyan)}
+textarea{width:100%;min-height:90px;resize:vertical;background:#0c0e18;border:1px solid var(--line2);border-radius:10px;padding:13px 15px;color:var(--ink);font-family:'Sora',sans-serif;font-size:14px;line-height:1.5;outline:none}
+textarea:focus{border-color:var(--cyan)}
+.echo{border-left:2px solid var(--cyan);padding:6px 0 6px 16px;margin:14px 0;color:var(--ink);font-size:14.5px;font-style:italic;font-weight:300}
+.nav{display:flex;align-items:center;gap:14px;margin-top:20px}
+.prog{display:flex;gap:6px;flex:1}
+.seg{height:4px;flex:1;border-radius:3px;background:#222740}
+.seg.on{background:var(--cyan);box-shadow:0 0 8px rgba(52,230,240,.6)}
+.next{padding:14px 26px;border:none;border-radius:10px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;color:#fff;background:linear-gradient(100deg,var(--crimson),var(--crimson-d));box-shadow:0 12px 34px -14px rgba(255,52,87,.8);transition:transform .12s;white-space:nowrap}
+.next:hover{transform:translateY(-2px)}
+.again{width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid var(--line2);border-radius:10px;color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.14em;cursor:pointer;transition:.15s}
+.again:hover{border-color:var(--cyan);color:var(--cyan)}
+.recap{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.rcell{flex:1;min-width:140px;background:#0c0e18;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.rcell .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+.rcell .v{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:18px;margin-top:4px;color:var(--ink)}
+svg .hex-fill{opacity:0;transition:opacity .9s .5s}
+svg .hex-stroke{stroke-dasharray:600;stroke-dashoffset:600;transition:stroke-dashoffset 1.3s cubic-bezier(.3,.8,.2,1)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="wrap">
+  <h2 class="sr">The Decoder: enter your psychometric report results to generate a personalised Future-Fit profile.</h2>
+  <div class="kicker">Decode your future · station 01</div>
+  <h1>THE <span class="b">DECODER</span></h1>
+  <p class="sub">Your report is a code. Feed in your interests, your aptitudes, your wiring, and watch it become the blueprint of who you're built to be in 2035.</p>
+
+  <div class="console" id="console">
+    <div class="cbar"><span class="dot"></span> INTAKE_CONSOLE // copy your three charts from your report</div>
+    <div class="cbody">
+      <div class="grp"><div class="glabel">01 · Interests</div><div class="ghint">SAVII chart: slide each to your score (0–20)</div><div class="rows" id="int"></div></div>
+      <div class="grp"><div class="glabel">02 · Aptitudes</div><div class="ghint">DAT-S subtests: your stanine for each (1–9)</div><div class="rows" id="apt"></div></div>
+      <div class="grp"><div class="glabel">03 · Personality</div><div class="ghint">JPQ axes: slide toward the side you lean (0–10)</div><div class="rows" id="pers"></div></div>
+      <button class="decode" id="go"><span class="swipe"></span>&#10689; DECODE MY FUTURE</button>
+    </div>
+  </div>
+  <div id="stage"></div>
+</div>
+
+<script>
+const INT=[{k:'P',label:'Practical',v:12},{k:'W',label:'Scientific',v:9},{k:'A',label:'Artistic',v:9},{k:'S',label:'Social',v:16},{k:'B',label:'Business',v:17},{k:'K',label:'Clerical',v:15}];
+const APT=[{k:'voc',label:'Vocabulary',v:5},{k:'vr',label:'Verbal Reason.',v:3},{k:'rc',label:'Reading Comp.',v:6},{k:'mem',label:'Memory',v:7},{k:'nvr',label:'Non-verbal Re.',v:4},{k:'comp',label:'Computations',v:6}];
+const PERS=[{k:'ie',l:'Introversion',r:'Extraversion',v:2},{k:'ns',l:'Intuition',r:'Sensing',v:6},{k:'ft',l:'Feeling',r:'Thinking',v:7},{k:'jp',l:'Judging',r:'Perceiving',v:7}];
+const SKILLS=['Goal-Driven & Proactive','Collaborative Relationships','Innovative & Curious','Creative Agility','Communicating with Impact','Analytical Thinking & PS','Critical Thinking','Financial Literacy','Tenacity'];
+const SKILL_W={B:{'Goal-Driven & Proactive':1,'Communicating with Impact':1,'Collaborative Relationships':.6},S:{'Collaborative Relationships':1,'Communicating with Impact':.8},W:{'Analytical Thinking & PS':1,'Critical Thinking':1,'Innovative & Curious':.6},K:{'Analytical Thinking & PS':1,'Goal-Driven & Proactive':.6,'Financial Literacy':.5},P:{'Creative Agility':.8,'Tenacity':1},A:{'Creative Agility':1,'Innovative & Curious':1}};
+const APT_W={voc:['Communicating with Impact',.25],vr:['Critical Thinking',.4],rc:['Communicating with Impact',.3],mem:['Analytical Thinking & PS',.25],nvr:['Innovative & Curious',.35],comp:['Analytical Thinking & PS',.4]};
+const APT_MUSCLE={voc:'Word power',vr:'Reasoning with words',rc:'Making sense of what you read',mem:'Holding lots of detail',nvr:'Spotting patterns & space',comp:'Fast number work'};
+const SUGG={
+ voc:['Keep a words notebook: jot 3 new words a week and actually use them in a sentence.','Read things slightly above your level; underline words you don\u2019t know and look them up.','Play word games (Wordle, crosswords, Scrabble). Low effort, real gains.'],
+ vr:['Practise saying why: explain your reasoning out loud, don\u2019t just give the answer.','Do analogy puzzles (A is to B as C is to ?) for 10 minutes a few times a week.','Argue a small point with a friend; debating sharpens how you reason with words.'],
+ rc:['Read a paragraph, then sum it up in one sentence. Can\u2019t? Read it again.','Ask \u201cwhat\u2019s the main point?\u201d before you move on, and make it a habit on everything.','Read a little every day; comprehension grows with mileage, not cramming.'],
+ mem:['Use flashcards with spaced repetition (Anki, Quizlet) instead of cramming.','Teach what you learned to someone else. If you can explain it, you\u2019ve got it.','Turn notes into mind-maps and break info into small chunks.'],
+ nvr:['Do pattern and logic puzzles: Sudoku, tangrams, \u201codd one out\u201d, shape rotations.','Sketch how things connect; drawing it out builds spatial reasoning.','Play games that need planning ahead (chess, strategy games). Same muscle.'],
+ comp:['Do 5 minutes of mental-maths drills daily. Small and often beats long and rare.','Lock your times tables cold; everything faster builds on them.','Use a maths app and time yourself to build speed.']};
+const FWE={'AI & Robotics':'#34a0ff','Healthcare':'#ff5c9a','Green Economy':'#54e08b','Entrepreneurship':'#ffc24b','Social Change':'#9b8cff'};
+const FWE_W={B:{'Entrepreneurship':1,'Social Change':.6},S:{'Healthcare':1,'Social Change':.8},W:{'AI & Robotics':1,'Healthcare':.7,'Green Economy':.6},K:{'Entrepreneurship':.7,'AI & Robotics':.6},P:{'Green Economy':1,'AI & Robotics':.7},A:{'Social Change':.8,'Entrepreneurship':.7}};
+const ARCH={B:['THE SPARK','you get people and ideas moving. A room doesn\u2019t start until you do.'],S:['THE ANCHOR','people steady themselves around you; you\u2019re who they come to.'],W:['THE ANALYST','you go deeper than everyone else and come back with the answer.'],K:['THE ARCHITECT','you turn mess into systems that just work.'],P:['THE BUILDER','you\u2019d rather make the thing than talk about the thing.'],A:['THE ORIGINAL','you make what didn\u2019t exist this morning.']};
+const TAG={B:'Spark',S:'Anchor',W:'Analyst',K:'Architect',P:'Builder',A:'Original'};
+const MIXGLOSS={B:'gets people and ideas moving',S:'people steady themselves around you',W:'digs deep and finds the answer',K:'turns mess into systems that work',P:'makes things real, hands-on',A:'creates what didn\u2019t exist yet'};
+const PLINE={ie:['you think things through internally and do your deepest work with focus and space.','you talk things through and draw your energy from people and action.'],ns:['you trust possibilities, patterns and the big picture.','you trust facts, detail and what is real and proven.'],ft:['you decide with empathy. The human impact comes first.','you decide with logic. You weigh the evidence and call it straight.'],jp:['you like a plan, deadlines and things settled.','you keep your options open and adapt as you go.']};
+const MOODS=['Excited','Surprised','Proud','Curious','Unsure','Relieved','Mixed'];
+
+function mkRows(list,box,max,pers){const w=document.getElementById(box);list.forEach(o=>{const r=document.createElement('div');
+ if(pers){r.className='row prow';r.innerHTML='<span class="rname">'+o.l+'</span><input type="range" min="0" max="'+max+'" step="1" value="'+o.v+'" id="'+box+'-'+o.k+'"><span class="rname r">'+o.r+'</span>';}
+ else{r.className='row';r.innerHTML='<span class="rname">'+o.label+'</span><input type="range" min="0" max="'+max+'" step="1" value="'+o.v+'" id="'+box+'-'+o.k+'"><span class="rval" id="v-'+box+'-'+o.k+'">'+o.v+'</span>';const s=r.querySelector('input');s.oninput=function(){document.getElementById('v-'+box+'-'+o.k).textContent=s.value;};}
+ w.appendChild(r);});}
+mkRows(INT,'int',20);mkRows(APT,'apt',9);mkRows(PERS,'pers',10,true);
+
+function radar(vals){var cx=110,cy=112,R=82,n=6,ax='',lb='',pts=[];
+ for(var i=0;i<n;i++){var a=-Math.PI/2+i*2*Math.PI/n,ex=cx+R*Math.cos(a),ey=cy+R*Math.sin(a);
+  ax+='<line x1="'+cx+'" y1="'+cy+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="rgba(255,255,255,.1)" stroke-width="1"/>';
+  var vv=vals[i]/20,px=cx+R*vv*Math.cos(a),py=cy+R*vv*Math.sin(a);pts.push(px.toFixed(1)+','+py.toFixed(1));
+  var lx=cx+(R+15)*Math.cos(a),ly=cy+(R+15)*Math.sin(a),an=Math.abs(Math.cos(a))<.3?'middle':(Math.cos(a)>0?'start':'end');
+  lb+='<text x="'+lx.toFixed(1)+'" y="'+(ly+3).toFixed(1)+'" text-anchor="'+an+'" fill="#9aa0bd" style="font:11px \'JetBrains Mono\',monospace">'+INT[i].label+'</text>';}
+ [.33,.66,1].forEach(function(g){var ring='';for(var i=0;i<n;i++){var a=-Math.PI/2+i*2*Math.PI/n;ring+=(i?' ':'')+(cx+R*g*Math.cos(a)).toFixed(1)+','+(cy+R*g*Math.sin(a)).toFixed(1);}ax='<polygon points="'+ring+'" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>'+ax;});
+ return '<svg viewBox="-56 0 332 226" width="100%" style="max-width:290px" role="img"><title>Interest hexagon</title>'+ax+'<polygon class="hex-fill" points="'+pts.join(' ')+'" fill="#34e6f0" fill-opacity=".16"/><polygon class="hex-stroke" points="'+pts.join(' ')+'" fill="none" stroke="#34e6f0" stroke-width="2.5" stroke-linejoin="round"/>'+lb+'</svg>';}
+
+var ST={};
+document.getElementById('go').onclick=function(){
+ var btn=this;btn.disabled=true;
+ var iv={};INT.forEach(function(o){iv[o.k]=+document.getElementById('int-'+o.k).value;});
+ var av={};APT.forEach(function(o){av[o.k]=+document.getElementById('apt-'+o.k).value;});
+ var pv={};PERS.forEach(function(o){pv[o.k]=+document.getElementById('pers-'+o.k).value;});
+ var n=3;btn.textContent='ANALYSING // '+n;var t=setInterval(function(){n--;if(n<=0){clearInterval(t);compute();}else btn.textContent='ANALYSING // '+n;},480);
+
+ function compute(){
+  var skill={};SKILLS.forEach(function(s){skill[s]=0;});var fwe={};Object.keys(FWE).forEach(function(f){fwe[f]=0;});
+  for(var k in iv){for(var s in (SKILL_W[k]||{}))skill[s]+=SKILL_W[k][s]*iv[k];for(var f in (FWE_W[k]||{}))fwe[f]+=FWE_W[k][f]*iv[k];}
+  for(var k2 in av){var m=APT_W[k2];skill[m[0]]+=m[1]*av[k2];}
+  var ranked=INT.map(function(o){return [o.k,iv[o.k]];}).sort(function(a,b){return b[1]-a[1];});
+  ST.iv=iv;ST.av=av;ST.pv=pv;
+  ST.arch=ARCH[ranked[0][0]];ST.mix=[TAG[ranked[1][0]],TAG[ranked[2][0]]];ST.blend=[ranked[0][0],ranked[1][0],ranked[2][0]];
+  ST.skA=Object.entries(skill).sort(function(a,b){return b[1]-a[1];});ST.skMax=ST.skA[0][1];
+  ST.fwA=Object.entries(fwe).sort(function(a,b){return b[1]-a[1];});ST.fwMax=ST.fwA[0][1];ST.world=ST.fwA[0][0];
+  ST.aptS=APT.map(function(o){return [o.k,av[o.k]];}).sort(function(a,b){return a[1]-b[1];});
+  ST.mood=null;ST.reflect='';
+  document.getElementById('console').style.display='none';
+  ST.i=0;render();
+ }
+};
+
+function steps(){return [stepType,stepSig,stepSkills,stepWorlds,stepGrowth,stepReflect,stepWrap];}
+function render(){
+ var fns=steps(),total=fns.length,o=fns[ST.i]();
+ var prog='';for(var j=0;j<total;j++)prog+='<div class="seg'+(j<=ST.i?' on':'')+'"></div>';
+ var last=ST.i===total-1;
+ var nav=last?'':'<div class="nav"><div class="prog">'+prog+'</div><button class="next" id="next">'+o.cta+'</button></div>';
+ document.getElementById('stage').innerHTML='<div class="screen">'+o.html+'</div>'+nav;
+ if(o.after)o.after();
+ if(!last)document.getElementById('next').onclick=function(){ST.i++;render();window.scrollTo({top:0,behavior:'smooth'});};
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function stepType(){var rows='';ST.blend.forEach(function(k,i){var prim=i===0;rows+='<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:11px"><span style="font-family:\'Chakra Petch\',sans-serif;font-weight:600;font-size:14.5px;min-width:92px;color:'+(prim?'var(--crimson)':'var(--cyan)')+'">The '+TAG[k]+(prim?'':'')+'</span><span style="font-size:13px;color:var(--mute);font-weight:300;line-height:1.4">'+MIXGLOSS[k]+(prim?' <span style="color:var(--faint)">\u2190 your lead</span>':'')+'</span></div>';});
+ return {cta:'CONTINUE \u25B8',html:
+ '<div class="typecard"><div class="unlock">\u25CF PROFILE UNLOCKED</div><div class="ftype">Your future-fit type</div>'+
+ '<div class="tname" id="tn">'+ST.arch[0]+'</div><div class="tdesc">'+ST.arch[1]+'</div>'+
+ '<div class="tmix">// you\u2019re a blend, not a box</div>'+
+ '<div style="margin:18px auto 0;max-width:380px;border-top:1px solid var(--line);padding-top:16px;text-align:left">'+
+ '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase;margin-bottom:13px;text-align:center">// your blend</div>'+rows+'</div></div>',
+ after:function(){scramble(document.getElementById('tn'),ST.arch[0]);}};}
+
+function stepSig(){var ops='';PERS.forEach(function(o){ops+='<div class="opline"><b>\u25B8</b><span>'+PLINE[o.k][ST.pv[o.k]>=5?1:0]+'</span></div>';});
+ return {cta:'CONTINUE \u25B8',html:'<div class="panel"><div class="shead">\u25C7 your signature</div><div class="stitle">How you\u2019re wired</div>'+
+ '<div class="split"><div style="text-align:center">'+radar(INT.map(function(o){return ST.iv[o.k];}))+'</div><div>'+ops+'</div></div></div>',
+ after:function(){requestAnimationFrame(function(){var s=document.querySelector('.hex-stroke');if(s)s.style.strokeDashoffset='0';var f=document.querySelector('.hex-fill');if(f)f.style.opacity='1';});}};}
+
+function stepSkills(){var b='';ST.skA.forEach(function(x,i){var hot=i<3;var pct=Math.max(10,Math.round(x[1]/ST.skMax*100));
+ b+='<div class="bar"><div class="blabel"><span class="nm'+(hot?' hot':'')+'">'+x[0]+(hot?'<span class="tagpill">EDGE</span>':'')+'</span></div><div class="btrack"><div class="bfill" data-w="'+pct+'" style="background:'+(hot?'#34e6f0':'#39405c')+'"></div></div></div>';});
+ return {cta:'CONTINUE \u25B8',html:'<div class="panel"><div class="shead">\u26A1 your power skill stack</div><div class="stitle" style="margin-bottom:6px">All nine, ranked. Your top three are currently your edge</div><p class="intro">Nothing here is fixed. Train any of them and the ranking shifts. That\u2019s the whole point.</p>'+b+'</div>',
+ after:fillBars};}
+
+function stepWorlds(){var b='';ST.fwA.forEach(function(x,i){var hot=i===0;var pct=Math.max(10,Math.round(x[1]/ST.fwMax*100));
+ b+='<div class="bar"><div class="blabel"><span class="nm'+(hot?' hot':'')+'">'+x[0]+(hot?' \u00B7 your strongest world':'')+'</span></div><div class="btrack"><div class="bfill" data-w="'+pct+'" style="background:'+(hot?FWE[x[0]]:'#39405c')+'"></div></div></div>';});
+ return {cta:'CONTINUE \u25B8',html:'<div class="panel"><div class="shead">\u25F7 where you fit in 2035</div><div class="stitle">Your strengths point hardest at <span style="color:'+FWE[ST.world]+'">'+ST.world+'</span></div>'+b+'</div>',
+ after:fillBars};}
+
+function stepGrowth(){var low=ST.aptS.filter(function(x){return x[1]<=4;}).slice(0,2);
+ if(low.length===0)low=[ST.aptS[0]];
+ var intro=low.length>1?'These aren\u2019t weaknesses. They\u2019re the areas with the most room to level up. Here\u2019s exactly how to train them this year.':'You\u2019re solid across the board. Here\u2019s your lightest area and a few ways to sharpen it.';
+ var cards='';low.forEach(function(x){var sugg='';SUGG[x[0]].forEach(function(s,i){sugg+='<div class="gsugg"><span class="n">0'+(i+1)+'</span><span>'+s+'</span></div>';});
+  cards+='<div class="gcard"><h4>'+APT_MUSCLE[x[0]]+'</h4><div class="gtag">DAT-S stanine '+x[1]+' / 9 \u00B7 your training zone</div>'+sugg+'</div>';});
+ return {cta:'CONTINUE \u25B8',html:'<div class="panel" style="border-color:rgba(255,194,75,.26)"><div class="shead" style="color:var(--gold)">\u25B3 your growth zone</div><div class="stitle">The muscles to train, and how</div><p class="intro">'+intro+'</p>'+cards+'</div>'};}
+
+function stepReflect(){var chips='';MOODS.forEach(function(m){chips+='<button class="chip" data-m="'+m+'">'+m+'</button>';});
+ return {cta:'SEE MY SUMMARY \u25B8',html:'<div class="panel"><div class="shead">\u25CE before you go</div><div class="stitle">How are you feeling about all this?</div>'+
+  '<div class="chips" id="chips">'+chips+'</div>'+
+  '<p class="intro" style="margin-bottom:10px">What\u2019s one thing that surprised you, or that you want to explore more? (optional)</p>'+
+  '<textarea id="reflect" placeholder="Type here\u2026">'+(ST.reflect||'')+'</textarea></div>',
+ after:function(){document.querySelectorAll('#chips .chip').forEach(function(c){if(c.dataset.m===ST.mood)c.classList.add('on');c.onclick=function(){document.querySelectorAll('#chips .chip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');ST.mood=c.dataset.m;};});
+  document.getElementById('reflect').oninput=function(){ST.reflect=this.value;};}};}
+
+function stepWrap(){var echo='';if(ST.mood||ST.reflect.trim())echo='<div class="echo">'+(ST.mood?'Feeling: '+ST.mood+'. ':'')+(ST.reflect.trim()?'\u201C'+ST.reflect.trim()+'\u201D':'')+'</div>';
+ var growth=ST.aptS[0];
+ return {cta:'',html:'<div class="typecard"><div class="ftype">Decoded</div><div class="tname" style="font-size:clamp(30px,7vw,46px)">'+ST.arch[0]+'</div>'+
+  '<div class="recap"><div class="rcell"><div class="l">Strongest world</div><div class="v" style="color:'+FWE[ST.world]+'">'+ST.world+'</div></div>'+
+  '<div class="rcell"><div class="l">Top power skill</div><div class="v" style="color:var(--cyan)">'+ST.skA[0][0].replace(' & ',' &\u200b ')+'</div></div>'+
+  '<div class="rcell"><div class="l">Training zone</div><div class="v" style="color:var(--gold)">'+APT_MUSCLE[growth[0]]+'</div></div></div>'+
+  echo+
+  '<p class="tdesc" style="margin-top:6px">That\u2019s your code, cracked. Next: step into <b style="color:'+FWE[ST.world]+'">'+ST.world+'</b> in the 2035 Simulator and put this profile to work.</p>'+
+  '<button class="again" id="again">\u21BB DECODE AGAIN WITH DIFFERENT RESULTS</button></div>',
+ after:function(){document.getElementById('again').onclick=function(){document.getElementById('stage').innerHTML='';document.getElementById('console').style.display='block';var b=document.getElementById('go');b.disabled=false;b.innerHTML='<span class="swipe"></span>\u10689 DECODE MY FUTURE';window.scrollTo({top:0,behavior:'smooth'});};}};}
+
+function fillBars(){setTimeout(function(){document.querySelectorAll('.bfill').forEach(function(b){b.style.width=b.dataset.w+'%';});},200);}
+function scramble(el,final){var ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&\u25AE',f=0;var id=setInterval(function(){el.textContent=final.split('').map(function(c,i){return c===' '?' ':(i<f?c:ch[Math.floor(Math.random()*ch.length)]);}).join('');f++;if(f>final.length){clearInterval(id);el.textContent=final;}},34);}
+</script>
+</body>
+</html>
