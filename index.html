@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#07070d; --bg2:#0d0e18; --panel:#11131f; --panel2:#161929;
@@ -93,9 +94,14 @@ textarea:focus{border-color:var(--cyan)}
 .seg{height:4px;flex:1;border-radius:3px;background:#222740}
 .seg.on{background:var(--cyan);box-shadow:0 0 8px rgba(52,230,240,.6)}
 .next{padding:14px 26px;border:none;border-radius:10px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;color:#fff;background:linear-gradient(100deg,var(--crimson),var(--crimson-d));box-shadow:0 12px 34px -14px rgba(255,52,87,.8);transition:transform .12s;white-space:nowrap}
+.back{padding:14px 20px;border:1px solid var(--line2);border-radius:10px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:14px;letter-spacing:.04em;color:var(--mute);background:transparent;transition:.12s;white-space:nowrap}
+.back:hover{border-color:var(--cyan);color:var(--ink)}
 .next:hover{transform:translateY(-2px)}
 .again{width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid var(--line2);border-radius:10px;color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.14em;cursor:pointer;transition:.15s}
 .again:hover{border-color:var(--cyan);color:var(--cyan)}
+.dlbtn{width:100%;margin-top:16px;padding:16px;border:none;border-radius:11px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;letter-spacing:.04em;color:#06222a;background:linear-gradient(100deg,var(--cyan),#17a7b0);animation:pulse 1.25s ease-in-out infinite}
+.dlbtn:hover{filter:brightness(1.08)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,230,240,.5)}50%{box-shadow:0 0 24px 6px rgba(52,230,240,.55)}}
 .recap{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
 .rcell{flex:1;min-width:140px;background:#0c0e18;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .rcell .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
@@ -132,6 +138,7 @@ const PERS=[{k:'ie',l:'Introversion',r:'Extraversion',v:2},{k:'ns',l:'Intuition'
 const SKILLS=['Goal-Driven & Proactive','Collaborative Relationships','Innovative & Curious','Creative Agility','Communicating with Impact','Analytical Thinking & PS','Critical Thinking','Financial Literacy','Tenacity'];
 const SKILL_W={B:{'Goal-Driven & Proactive':1,'Communicating with Impact':1,'Collaborative Relationships':.6},S:{'Collaborative Relationships':1,'Communicating with Impact':.8},W:{'Analytical Thinking & PS':1,'Critical Thinking':1,'Innovative & Curious':.6},K:{'Analytical Thinking & PS':1,'Goal-Driven & Proactive':.6,'Financial Literacy':.5},P:{'Creative Agility':.8,'Tenacity':1},A:{'Creative Agility':1,'Innovative & Curious':1}};
 const APT_W={voc:['Communicating with Impact',.25],vr:['Critical Thinking',.4],rc:['Communicating with Impact',.3],mem:['Analytical Thinking & PS',.25],nvr:['Innovative & Curious',.35],comp:['Analytical Thinking & PS',.4]};
+const GROWTH_MAP={comp:'Financial Literacy',mem:'Analytical Thinking & PS',nvr:'Analytical Thinking & PS',vr:'Critical Thinking',voc:'Communicating with Impact',rc:'Communicating with Impact'};
 const APT_MUSCLE={voc:'Word power',vr:'Reasoning with words',rc:'Making sense of what you read',mem:'Holding lots of detail',nvr:'Spotting patterns & space',comp:'Fast number work'};
 const SUGG={
  voc:['Keep a words notebook: jot 3 new words a week and actually use them in a sentence.','Read things slightly above your level; underline words you don\u2019t know and look them up.','Play word games (Wordle, crosswords, Scrabble). Low effort, real gains.'],
@@ -181,6 +188,9 @@ document.getElementById('go').onclick=function(){
   ST.skA=Object.entries(skill).sort(function(a,b){return b[1]-a[1];});ST.skMax=ST.skA[0][1];
   ST.fwA=Object.entries(fwe).sort(function(a,b){return b[1]-a[1];});ST.fwMax=ST.fwA[0][1];ST.world=ST.fwA[0][0];
   ST.aptS=APT.map(function(o){return [o.k,av[o.k]];}).sort(function(a,b){return a[1]-b[1];});
+  var top3=ST.skA.slice(0,3).map(function(z){return z[0];});
+  ST.growthApt=ST.aptS[0][0];ST.growthStan=ST.aptS[0][1];ST.growthSkill=GROWTH_MAP[ST.growthApt];
+  for(var gi=0;gi<ST.aptS.length;gi++){var gk=ST.aptS[gi][0];if(top3.indexOf(GROWTH_MAP[gk])<0){ST.growthApt=gk;ST.growthStan=ST.aptS[gi][1];ST.growthSkill=GROWTH_MAP[gk];break;}}
   ST.mood=null;ST.reflect='';
   document.getElementById('console').style.display='none';
   ST.i=0;render();
@@ -192,10 +202,12 @@ function render(){
  var fns=steps(),total=fns.length,o=fns[ST.i]();
  var prog='';for(var j=0;j<total;j++)prog+='<div class="seg'+(j<=ST.i?' on':'')+'"></div>';
  var last=ST.i===total-1;
- var nav=last?'':'<div class="nav"><div class="prog">'+prog+'</div><button class="next" id="next">'+o.cta+'</button></div>';
+ var backBtn=ST.i>0?'<button class="back" id="back">\u25C2 BACK</button>':'';
+ var nav=last?(ST.i>0?'<div class="nav">'+backBtn+'</div>':''):'<div class="nav">'+backBtn+'<div class="prog">'+prog+'</div><button class="next" id="next">'+o.cta+'</button></div>';
  document.getElementById('stage').innerHTML='<div class="screen">'+o.html+'</div>'+nav;
  if(o.after)o.after();
  if(!last)document.getElementById('next').onclick=function(){ST.i++;render();window.scrollTo({top:0,behavior:'smooth'});};
+ var bk=document.getElementById('back');if(bk)bk.onclick=function(){ST.i--;render();window.scrollTo({top:0,behavior:'smooth'});};
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -223,12 +235,15 @@ function stepWorlds(){var b='';ST.fwA.forEach(function(x,i){var hot=i===0;var pc
  return {cta:'CONTINUE \u25B8',html:'<div class="panel"><div class="shead">\u25F7 where you fit in 2035</div><div class="stitle">Your strengths point hardest at <span style="color:'+FWE[ST.world]+'">'+ST.world+'</span></div>'+b+'</div>',
  after:fillBars};}
 
-function stepGrowth(){var low=ST.aptS.filter(function(x){return x[1]<=4;}).slice(0,2);
- if(low.length===0)low=[ST.aptS[0]];
- var intro=low.length>1?'These aren\u2019t weaknesses. They\u2019re the areas with the most room to level up. Here\u2019s exactly how to train them this year.':'You\u2019re solid across the board. Here\u2019s your lightest area and a few ways to sharpen it.';
- var cards='';low.forEach(function(x){var sugg='';SUGG[x[0]].forEach(function(s,i){sugg+='<div class="gsugg"><span class="n">0'+(i+1)+'</span><span>'+s+'</span></div>';});
-  cards+='<div class="gcard"><h4>'+APT_MUSCLE[x[0]]+'</h4><div class="gtag">DAT-S stanine '+x[1]+' / 9 \u00B7 your training zone</div>'+sugg+'</div>';});
- return {cta:'CONTINUE \u25B8',html:'<div class="panel" style="border-color:rgba(255,194,75,.26)"><div class="shead" style="color:var(--gold)">\u25B3 your growth zone</div><div class="stitle">The muscles to train, and how</div><p class="intro">'+intro+'</p>'+cards+'</div>'};}
+function stepGrowth(){
+ var sugg='';SUGG[ST.growthApt].forEach(function(s,i){sugg+='<div class="gsugg"><span class="n">0'+(i+1)+'</span><span>'+s+'</span></div>';});
+ var html='<div class="panel" style="border-color:rgba(255,194,75,.26)">'+
+  '<div class="shead" style="color:var(--gold)">\u25B3 your growth zone</div>'+
+  '<div class="stitle">The Power Skill to grow: <span style="color:var(--gold)">'+ST.growthSkill+'</span></div>'+
+  '<p class="intro">This is not a weakness. It is the Power Skill with the most room to grow, and the one to lean into this year.</p>'+
+  '<div class="gcard"><h4>Why this one</h4><p style="font-size:13.5px;line-height:1.55;color:var(--mute);margin:0">Your <b style="color:var(--gold)">'+APT_MUSCLE[ST.growthApt].toLowerCase()+'</b> result (DAT-S stanine '+ST.growthStan+' / 9) points here. That aptitude is the engine behind <b style="color:var(--gold)">'+ST.growthSkill+'</b>, so it is your clearest place to level up.</p></div>'+
+  '<div class="gcard"><h4>How to grow it</h4>'+sugg+'</div>';
+ return {cta:'CONTINUE \u25B8',html:html+'</div>'};}
 
 function stepReflect(){var chips='';MOODS.forEach(function(m){chips+='<button class="chip" data-m="'+m+'">'+m+'</button>';});
  return {cta:'SEE MY SUMMARY \u25B8',html:'<div class="panel"><div class="shead">\u25CE before you go</div><div class="stitle">How are you feeling about all this?</div>'+
@@ -239,15 +254,43 @@ function stepReflect(){var chips='';MOODS.forEach(function(m){chips+='<button cl
   document.getElementById('reflect').oninput=function(){ST.reflect=this.value;};}};}
 
 function stepWrap(){var echo='';if(ST.mood||ST.reflect.trim())echo='<div class="echo">'+(ST.mood?'Feeling: '+ST.mood+'. ':'')+(ST.reflect.trim()?'\u201C'+ST.reflect.trim()+'\u201D':'')+'</div>';
- var growth=ST.aptS[0];
  return {cta:'',html:'<div class="typecard"><div class="ftype">Decoded</div><div class="tname" style="font-size:clamp(30px,7vw,46px)">'+ST.arch[0]+'</div>'+
   '<div class="recap"><div class="rcell"><div class="l">Strongest world</div><div class="v" style="color:'+FWE[ST.world]+'">'+ST.world+'</div></div>'+
   '<div class="rcell"><div class="l">Top power skill</div><div class="v" style="color:var(--cyan)">'+ST.skA[0][0].replace(' & ',' &\u200b ')+'</div></div>'+
-  '<div class="rcell"><div class="l">Training zone</div><div class="v" style="color:var(--gold)">'+APT_MUSCLE[growth[0]]+'</div></div></div>'+
+  '<div class="rcell"><div class="l">Growth zone</div><div class="v" style="color:var(--gold)">'+ST.growthSkill.replace(' & ',' &\u200b ')+'</div></div></div>'+
   echo+
-  '<p class="tdesc" style="margin-top:6px">That\u2019s your code, cracked. Next: step into <b style="color:'+FWE[ST.world]+'">'+ST.world+'</b> in the 2035 Simulator and put this profile to work.</p>'+
+  '<p class="tdesc" style="margin-top:6px">That\u2019s your code, cracked. Download your profile below so it is yours to keep, then carry on to the next station. It is all online, in your own time.</p>'+
+  '<button class="dlbtn" id="dl">\u2B07 DOWNLOAD MY REPORT (PDF)</button>'+
   '<button class="again" id="again">\u21BB DECODE AGAIN WITH DIFFERENT RESULTS</button></div>',
- after:function(){document.getElementById('again').onclick=function(){document.getElementById('stage').innerHTML='';document.getElementById('console').style.display='block';var b=document.getElementById('go');b.disabled=false;b.innerHTML='<span class="swipe"></span>\u10689 DECODE MY FUTURE';window.scrollTo({top:0,behavior:'smooth'});};}};}
+ after:function(){document.getElementById('dl').onclick=downloadReport;document.getElementById('again').onclick=function(){document.getElementById('stage').innerHTML='';document.getElementById('console').style.display='block';var b=document.getElementById('go');b.disabled=false;b.innerHTML='<span class="swipe"></span>\u10689 DECODE MY FUTURE';window.scrollTo({top:0,behavior:'smooth'});};}};}
+
+function hexToRgb(h){h=(h||'#ffffff').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');var n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function ensurePdf(cb){if(window.jspdf&&window.jspdf.jsPDF){cb();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=cb;s.onerror=function(){alert('Could not load the PDF tool. Check your connection and try again.');};document.head.appendChild(s);}
+function downloadReport(){ensurePdf(buildPdf);}
+function buildPdf(){
+ var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});var W=595,H=842,x=50,y=72;
+ doc.setFillColor(13,14,24);doc.rect(0,0,W,H,'F');
+ doc.setFillColor(255,52,87);doc.rect(0,0,W,6,'F');
+ doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(52,230,240);
+ doc.text('DECODE YOUR FUTURE   \u00B7   THE EDGE',x,y);
+ y+=32;doc.setFontSize(25);doc.setTextColor(238,241,251);doc.text('Your Future-Fit Profile',x,y);
+ y+=18;doc.setDrawColor(60,66,90);doc.setLineWidth(0.6);doc.line(x,y,W-50,y);y+=32;
+ function label(t){doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(154,160,189);doc.text(t.toUpperCase(),x,y);y+=17;}
+ function val(t,c,sz){doc.setFont('helvetica','bold');doc.setFontSize(sz||15);doc.setTextColor(c[0],c[1],c[2]);doc.text(t,x,y);y+=20;}
+ function para(t,c){doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(c[0],c[1],c[2]);var ls=doc.splitTextToSize(t,W-100);doc.text(ls,x,y);y+=ls.length*15;}
+ label('Your type');val('The '+ST.arch[0],[255,52,87],17);para(ST.arch[1],[154,160,189]);y+=14;
+ label('Strongest world');val(ST.world,hexToRgb(FWE[ST.world]),15);y+=10;
+ label('Your edge \u00B7 top three power skills');
+ for(var i=0;i<3;i++){val((i+1)+'.  '+ST.skA[i][0],[52,230,240],13);}
+ doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(100,106,135);
+ for(var j=3;j<ST.skA.length;j++){doc.text((j+1)+'.  '+ST.skA[j][0],x,y);y+=15;}
+ y+=14;label('Growth zone \u00B7 power skill to grow');val(ST.growthSkill,[255,194,75],15);
+ doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(100,106,135);doc.text('Anchored to your '+APT_MUSCLE[ST.growthApt].toLowerCase()+' result (stanine '+ST.growthStan+'/9)',x,y);y+=18;
+ if(ST.mood||ST.reflect.trim()){label('In your words');if(ST.mood){val('Feeling: '+ST.mood,[238,241,251],12);}if(ST.reflect.trim()){para('\u201C'+ST.reflect.trim()+'\u201D',[238,241,251]);}}
+ doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100,106,135);
+ doc.text('The Edge   \u00B7   Students for a Better Future',x,H-40);
+ doc.save('My-Future-Fit-Profile.pdf');
+}
 
 function fillBars(){setTimeout(function(){document.querySelectorAll('.bfill').forEach(function(b){b.style.width=b.dataset.w+'%';});},200);}
 function scramble(el,final){var ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&\u25AE',f=0;var id=setInterval(function(){el.textContent=final.split('').map(function(c,i){return c===' '?' ':(i<f?c:ch[Math.floor(Math.random()*ch.length)]);}).join('');f++;if(f>final.length){clearInterval(id);el.textContent=final;}},34);}
