@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#07070d; --bg2:#0d0e18; --panel:#11131f; --panel2:#161929;
@@ -40,6 +39,9 @@ h1 .b{color:var(--crimson)}
 .ghint{font-size:12.5px;color:var(--faint);margin-bottom:14px;font-weight:300}
 .rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:11px 26px}
 .row{display:flex;align-items:center;gap:12px}
+.row.stack{flex-direction:column;align-items:stretch;gap:6px}
+.row.stack .rname{min-width:0;font-size:12.5px;color:var(--ink);line-height:1.25}
+.srow{display:flex;align-items:center;gap:10px}
 .rname{font-size:13px;min-width:96px;color:var(--ink);font-weight:400}
 .rval{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--cyan);min-width:20px;text-align:right}
 input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:4px;background:#262a40;outline:none;cursor:pointer}
@@ -99,9 +101,6 @@ textarea:focus{border-color:var(--cyan)}
 .next:hover{transform:translateY(-2px)}
 .again{width:100%;margin-top:14px;padding:13px;background:transparent;border:1px solid var(--line2);border-radius:10px;color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.14em;cursor:pointer;transition:.15s}
 .again:hover{border-color:var(--cyan);color:var(--cyan)}
-.dlbtn{width:100%;margin-top:16px;padding:16px;border:none;border-radius:11px;cursor:pointer;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:15px;letter-spacing:.04em;color:#06222a;background:linear-gradient(100deg,var(--cyan),#17a7b0);animation:pulse 1.25s ease-in-out infinite}
-.dlbtn:hover{filter:brightness(1.08)}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,230,240,.5)}50%{box-shadow:0 0 24px 6px rgba(52,230,240,.55)}}
 .recap{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
 .rcell{flex:1;min-width:140px;background:#0c0e18;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .rcell .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
@@ -132,8 +131,8 @@ svg .hex-stroke{stroke-dasharray:600;stroke-dashoffset:600;transition:stroke-das
 </div>
 
 <script>
-const INT=[{k:'P',label:'Practical',v:12},{k:'W',label:'Scientific',v:9},{k:'A',label:'Artistic',v:9},{k:'S',label:'Social',v:16},{k:'B',label:'Business',v:17},{k:'K',label:'Clerical',v:15}];
-const APT=[{k:'voc',label:'Vocabulary',v:5},{k:'vr',label:'Verbal Reason.',v:3},{k:'rc',label:'Reading Comp.',v:6},{k:'mem',label:'Memory',v:7},{k:'nvr',label:'Non-verbal Re.',v:4},{k:'comp',label:'Computations',v:6}];
+const INT=[{k:'P',label:'Practical Realistic (P)',short:'Practical',v:12},{k:'W',label:'Scientific Investigative (W)',short:'Scientific',v:9},{k:'A',label:'Artistic (A)',short:'Artistic',v:9},{k:'S',label:'Social Services (S)',short:'Social',v:16},{k:'B',label:'Business Management (B)',short:'Business',v:17},{k:'K',label:'Clerical Administrative (K)',short:'Clerical',v:15}];
+const APT=[{k:'voc',label:'Vocabulary',v:5},{k:'vr',label:'Verbal Reasoning',v:3},{k:'rc',label:'Reading Comprehension',v:6},{k:'mem',label:'Memory',v:7},{k:'nvr',label:'Non-verbal Reasoning',v:4},{k:'comp',label:'Computations',v:6}];
 const PERS=[{k:'ie',l:'Introversion',r:'Extraversion',v:2},{k:'ns',l:'Intuition',r:'Sensing',v:6},{k:'ft',l:'Feeling',r:'Thinking',v:7},{k:'jp',l:'Judging',r:'Perceiving',v:7}];
 const SKILLS=['Goal-Driven & Proactive','Collaborative Relationships','Innovative & Curious','Creative Agility','Communicating with Impact','Analytical Thinking','Critical Thinking','Financial Literacy','Tenacity'];
 const SKILL_W={B:{'Goal-Driven & Proactive':1,'Communicating with Impact':1,'Collaborative Relationships':.6},S:{'Collaborative Relationships':1,'Communicating with Impact':.8},W:{'Analytical Thinking':1,'Critical Thinking':1,'Innovative & Curious':.6},K:{'Analytical Thinking':1,'Goal-Driven & Proactive':.6,'Financial Literacy':.5},P:{'Creative Agility':.8,'Tenacity':1},A:{'Creative Agility':1,'Innovative & Curious':1}};
@@ -157,7 +156,7 @@ const MOODS=['Excited','Surprised','Proud','Curious','Unsure','Relieved','Mixed'
 
 function mkRows(list,box,max,pers){const w=document.getElementById(box);list.forEach(o=>{const r=document.createElement('div');
  if(pers){r.className='row prow';r.innerHTML='<span class="rname">'+o.l+'</span><input type="range" min="0" max="'+max+'" step="1" value="'+o.v+'" id="'+box+'-'+o.k+'"><span class="rname r">'+o.r+'</span>';}
- else{r.className='row';r.innerHTML='<span class="rname">'+o.label+'</span><input type="range" min="0" max="'+max+'" step="1" value="'+o.v+'" id="'+box+'-'+o.k+'"><span class="rval" id="v-'+box+'-'+o.k+'">'+o.v+'</span>';const s=r.querySelector('input');s.oninput=function(){document.getElementById('v-'+box+'-'+o.k).textContent=s.value;};}
+ else{r.className='row stack';r.innerHTML='<span class="rname">'+o.label+'</span><div class="srow"><input type="range" min="0" max="'+max+'" step="1" value="'+o.v+'" id="'+box+'-'+o.k+'"><span class="rval" id="v-'+box+'-'+o.k+'">'+o.v+'</span></div>';const s=r.querySelector('input');s.oninput=function(){document.getElementById('v-'+box+'-'+o.k).textContent=s.value;};}
  w.appendChild(r);});}
 mkRows(INT,'int',20);mkRows(APT,'apt',9);mkRows(PERS,'pers',10,true);
 
@@ -166,7 +165,7 @@ function radar(vals){var cx=110,cy=112,R=82,n=6,ax='',lb='',pts=[];
   ax+='<line x1="'+cx+'" y1="'+cy+'" x2="'+ex.toFixed(1)+'" y2="'+ey.toFixed(1)+'" stroke="rgba(255,255,255,.1)" stroke-width="1"/>';
   var vv=vals[i]/20,px=cx+R*vv*Math.cos(a),py=cy+R*vv*Math.sin(a);pts.push(px.toFixed(1)+','+py.toFixed(1));
   var lx=cx+(R+15)*Math.cos(a),ly=cy+(R+15)*Math.sin(a),an=Math.abs(Math.cos(a))<.3?'middle':(Math.cos(a)>0?'start':'end');
-  lb+='<text x="'+lx.toFixed(1)+'" y="'+(ly+3).toFixed(1)+'" text-anchor="'+an+'" fill="#9aa0bd" style="font:11px \'JetBrains Mono\',monospace">'+INT[i].label+'</text>';}
+  lb+='<text x="'+lx.toFixed(1)+'" y="'+(ly+3).toFixed(1)+'" text-anchor="'+an+'" fill="#9aa0bd" style="font:11px \'JetBrains Mono\',monospace">'+INT[i].short+'</text>';}
  [.33,.66,1].forEach(function(g){var ring='';for(var i=0;i<n;i++){var a=-Math.PI/2+i*2*Math.PI/n;ring+=(i?' ':'')+(cx+R*g*Math.cos(a)).toFixed(1)+','+(cy+R*g*Math.sin(a)).toFixed(1);}ax='<polygon points="'+ring+'" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>'+ax;});
  return '<svg viewBox="-56 0 332 226" width="100%" style="max-width:290px" role="img"><title>Interest hexagon</title>'+ax+'<polygon class="hex-fill" points="'+pts.join(' ')+'" fill="#34e6f0" fill-opacity=".16"/><polygon class="hex-stroke" points="'+pts.join(' ')+'" fill="none" stroke="#34e6f0" stroke-width="2.5" stroke-linejoin="round"/>'+lb+'</svg>';}
 
@@ -259,38 +258,9 @@ function stepWrap(){var echo='';if(ST.mood||ST.reflect.trim())echo='<div class="
   '<div class="rcell"><div class="l">Top power skill</div><div class="v" style="color:var(--cyan)">'+ST.skA[0][0].replace(' & ',' &\u200b ')+'</div></div>'+
   '<div class="rcell"><div class="l">Growth zone</div><div class="v" style="color:var(--gold)">'+ST.growthSkill.replace(' & ',' &\u200b ')+'</div></div></div>'+
   echo+
-  '<p class="tdesc" style="margin-top:6px">That\u2019s your code, cracked. Download your profile below so it is yours to keep, then carry on to the next station. It is all online, in your own time.</p>'+
-  '<button class="dlbtn" id="dl">\u2B07 DOWNLOAD MY REPORT (PDF)</button>'+
+  '<p class="tdesc" style="margin-top:6px">That\u2019s your code, cracked. Take a moment with it, then carry on to the next station. It is all online, in your own time.</p>'+
   '<button class="again" id="again">\u21BB DECODE AGAIN WITH DIFFERENT RESULTS</button></div>',
- after:function(){document.getElementById('dl').onclick=downloadReport;document.getElementById('again').onclick=function(){document.getElementById('stage').innerHTML='';document.getElementById('console').style.display='block';var b=document.getElementById('go');b.disabled=false;b.innerHTML='<span class="swipe"></span>\u10689 DECODE MY FUTURE';window.scrollTo({top:0,behavior:'smooth'});};}};}
-
-function hexToRgb(h){h=(h||'#ffffff').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');var n=parseInt(h,16);return [(n>>16)&255,(n>>8)&255,n&255];}
-function ensurePdf(cb){if(window.jspdf&&window.jspdf.jsPDF){cb();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=cb;s.onerror=function(){alert('Could not load the PDF tool. Check your connection and try again.');};document.head.appendChild(s);}
-function downloadReport(){ensurePdf(buildPdf);}
-function buildPdf(){
- var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});var W=595,H=842,x=50,y=72;
- doc.setFillColor(13,14,24);doc.rect(0,0,W,H,'F');
- doc.setFillColor(255,52,87);doc.rect(0,0,W,6,'F');
- doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(52,230,240);
- doc.text('DECODE YOUR FUTURE   \u00B7   THE EDGE',x,y);
- y+=32;doc.setFontSize(25);doc.setTextColor(238,241,251);doc.text('Your Future-Fit Profile',x,y);
- y+=18;doc.setDrawColor(60,66,90);doc.setLineWidth(0.6);doc.line(x,y,W-50,y);y+=32;
- function label(t){doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(154,160,189);doc.text(t.toUpperCase(),x,y);y+=17;}
- function val(t,c,sz){doc.setFont('helvetica','bold');doc.setFontSize(sz||15);doc.setTextColor(c[0],c[1],c[2]);doc.text(t,x,y);y+=20;}
- function para(t,c){doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(c[0],c[1],c[2]);var ls=doc.splitTextToSize(t,W-100);doc.text(ls,x,y);y+=ls.length*15;}
- label('Your type');val('The '+ST.arch[0],[255,52,87],17);para(ST.arch[1],[154,160,189]);y+=14;
- label('Strongest world');val(ST.world,hexToRgb(FWE[ST.world]),15);y+=10;
- label('Your edge \u00B7 top three power skills');
- for(var i=0;i<3;i++){val((i+1)+'.  '+ST.skA[i][0],[52,230,240],13);}
- doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(100,106,135);
- for(var j=3;j<ST.skA.length;j++){doc.text((j+1)+'.  '+ST.skA[j][0],x,y);y+=15;}
- y+=14;label('Growth zone \u00B7 power skill to grow');val(ST.growthSkill,[255,194,75],15);
- doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(100,106,135);doc.text('Anchored to your '+APT_MUSCLE[ST.growthApt].toLowerCase()+' result (stanine '+ST.growthStan+'/9)',x,y);y+=18;
- if(ST.mood||ST.reflect.trim()){label('In your words');if(ST.mood){val('Feeling: '+ST.mood,[238,241,251],12);}if(ST.reflect.trim()){para('\u201C'+ST.reflect.trim()+'\u201D',[238,241,251]);}}
- doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100,106,135);
- doc.text('The Edge   \u00B7   Students for a Better Future',x,H-40);
- doc.save('My-Future-Fit-Profile.pdf');
-}
+ after:function(){document.getElementById('again').onclick=function(){document.getElementById('stage').innerHTML='';document.getElementById('console').style.display='block';var b=document.getElementById('go');b.disabled=false;b.innerHTML='<span class="swipe"></span>\u10689 DECODE MY FUTURE';window.scrollTo({top:0,behavior:'smooth'});};}};}
 
 function fillBars(){setTimeout(function(){document.querySelectorAll('.bfill').forEach(function(b){b.style.width=b.dataset.w+'%';});},200);}
 function scramble(el,final){var ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&\u25AE',f=0;var id=setInterval(function(){el.textContent=final.split('').map(function(c,i){return c===' '?' ':(i<f?c:ch[Math.floor(Math.random()*ch.length)]);}).join('');f++;if(f>final.length){clearInterval(id);el.textContent=final;}},34);}
